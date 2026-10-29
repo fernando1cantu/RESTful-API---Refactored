@@ -1,5 +1,4 @@
 import express from "express";
-
 const router = express.Router();
 
 function isGoodStringParam(param){
@@ -57,3 +56,106 @@ const games = [
     imageUrl: "https://placehold.co/300x400?text=Super+Mario+Odyssey"
   }
 ];
+
+
+
+router.get("/games", (req, res) => {
+    res.status(200).json(games);
+});
+
+router.get("/game/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const game = games.find(game => game.id === id);
+
+    if (!game) {
+        return res.status(404).json({ message: "Game not found!" });
+    }
+
+    res.status(200).json(game);
+});
+
+router.post("/game", (req, res) => {
+    const { title, price } = req.body;
+
+    if (!isGoodStringParam(title) || !isGoodNumericParam(price)) {
+        return res.status(400).json({
+            message: "Game title and price are required fields"
+        });
+    }
+
+    const newGame = {
+        id: Math.max(0, ...games.map(game => game.id)) + 1,
+        title,
+        price
+    };
+
+    games.push(newGame);
+    res.status(201).json(newGame);
+});
+
+router.put("/game/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const game = games.find(game => game.id === id);
+
+    if (!game) {
+        return res.status(404).json({ message: "Game not found!" });
+    }
+
+    const { title, price } = req.body;
+
+    if (!isGoodStringParam(title) || !isGoodNumericParam(price)) {
+        return res.status(400).json({
+            message: "Game title and price are required fields"
+        });
+    }
+
+    game.title = title;
+    game.price = price;
+
+    res.status(200).json(game);
+});
+
+router.patch("/game/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const game = games.find(game => game.id === id);
+
+    if (!game) {
+        return res.status(404).json({ message: "Game not found!" });
+    }
+
+    const { title, price } = req.body;
+
+    if (title !== undefined) {
+        if (!isGoodStringParam(title)) {
+            return res.status(400).json({
+                message: "Invalid game title"
+            });
+        }
+        game.title = title;
+    }
+
+    if (price !== undefined) {
+        if (!isGoodNumericParam(price)) {
+            return res.status(400).json({
+                message: "Invalid game price"
+            });
+        }
+        game.price = price;
+    }
+
+    res.status(200).json(game);
+});
+
+router.delete("/game/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const gameIx = games.findIndex(game => game.id === id);
+
+    if (gameIx === -1) {
+        return res.status(404).json({ message: "Game not found!" });
+    }
+
+    games.splice(gameIx, 1);
+    res.status(204).send();
+});
+
+export default router;
